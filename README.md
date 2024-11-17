@@ -1,8 +1,21 @@
-
 # Mastermind Game
-LIVE DEMO: https://thestevendev.github.io/Mastermind/
+
+This is a *mod* of [Steven's Mastermind](https://github.com/TheStevenDev/Mastermind), which unfortunately does NOT really work well - it gives the wrong clues, amongst other shortcomings >.<"
+
+## Improvements
+* **Correct** clues are given. (Hopefully it's all fixed).
+  * Alternate **'Easy Mode'** to show clues in their positions.
+* **Shows answer** at end of game: so no more unresolved cliff hangers.
+   * No longer auto-resets. Take your time to study the game and hit 'New Game' only when you're ready to go again =)
+   * Shows number of chances/guesses remaining, so game won't end abruptly.
+* **Larger slots/circles**: easier to drop colour into. 
+* Add missing resources, so that it can be played entirely on its own.
+
+## Original README
 <hr>
-  
+**BAD** LIVE DEMO: https://thestevendev.github.io/Mastermind/
+PS: The clues are wrong!
+<hr>  
 <p>An implementation of the classic game Mastermind using HTML, CSS, and JavaScript.</p>
     <p>This project offers the opportunity to play Mastermind, trying to guess a secret combination of colors.</p>
     <h2>Features</h2>

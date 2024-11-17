@@ -1,9 +1,14 @@
+const MAX_CHANCES = 8;
+let EASY_MODE = false; //show black/white at same slots
+
 var randomColors = []; //Pc random colors
 var mySequence = [];
 
 var myColors;
 var attempts = 0;
 var selected;
+
+let gameInProgress = true;
 
 function riempiArray(){
 
@@ -67,6 +72,8 @@ function colorToNumber(color){
 }
 
 function configure(){
+    updateEasyMode();
+
     console.log(document.getElementById("3").style.width);
     document.getElementById("submit").addEventListener("click",submitButton); //Submit button
 
@@ -79,7 +86,6 @@ function configure(){
         color.addEventListener("touchstart",touchStartEvent);
     }
 
-
     //AGGIUNGO DRAGOVER E DRAGDROP agli slot
     let slots = document.getElementsByClassName("color-item");
 
@@ -88,6 +94,7 @@ function configure(){
         slot.addEventListener("drop",dropEvent);
     }
 
+    //addNewRow();
 }
 
 //EVENTS
@@ -108,8 +115,8 @@ function dropEvent(e){
     let newColor = numberToColor(parseInt(selected));
 
     let slotElement = document.getElementById(e.target.id);
-    slotElement.style.setProperty("background-color",newColor);
-    
+    if (slotElement) slotElement.style.setProperty("background-color", newColor);
+
     selected = null;
 }
 
@@ -123,8 +130,27 @@ function showAlert(){
     alertDiv.style.display = "flex";
 }
 
+function endGame()
+{
+    gameInProgress = false;
+    document.getElementById("submit").innerHTML = 'New Game';
+
+    //show answer
+    for (let i = 0; i < 4; ++i)
+    {
+        let newColor = numberToColor(randomColors[i]);
+
+        let slotElement = document.getElementById(`ans${i+1}`);
+        if (slotElement)
+        {
+            slotElement.style.setProperty("background-color", newColor);
+            slotElement.innerHTML = '';
+        }
+    }
+}
 
 function showWin(){
+    endGame();
     let alertDiv = document.getElementById("alert");
 
     alertDiv.innerHTML = "YOU WON!";
@@ -133,6 +159,7 @@ function showWin(){
 }
 
 function showLost(){
+    endGame();
     let alertDiv = document.getElementById("alert");
 
     alertDiv.innerHTML = "YOU LOST!";
@@ -151,7 +178,7 @@ function checkEmpty(){
     let slots = document.getElementsByClassName("color-item");
     for(slot of slots){
         var slotColor = window.getComputedStyle(slot).getPropertyValue("background-color");
-        console.log(window.getComputedStyle(slot).getPropertyValue("background-color"))
+        //console.log(window.getComputedStyle(slot).getPropertyValue("background-color"))
 
         if(slotColor === "rgb(210, 180, 140)"){
             return true;
@@ -169,6 +196,12 @@ function checkWin(arr1, arr2){
     return true;
 }
 
+function updateEasyMode(cb)
+{
+    if (!cb)
+        cb = document.getElementById('cbEasy');
+    EASY_MODE = cb.checked;
+}
 
 function submitButton(e){
     if (checkEmpty()===true){
@@ -177,58 +210,123 @@ function submitButton(e){
         return;
     }
 
-    attempts++; //increase attempts
-    if(attempts===9){
-        showLost();
-        setTimeout(hideAlert, 3000);
-        setTimeout(function() {location.reload();}, 2000);
+    if (!gameInProgress)
+    {
+        //start new game
+        location.reload();
         return;
     }
 
+    attempts++; //increase attempts
+
     //Check positions
     mySequence = [colorToNumber(document.getElementById("first").style.backgroundColor),colorToNumber(document.getElementById("second").style.backgroundColor),colorToNumber(document.getElementById("third").style.backgroundColor),colorToNumber(document.getElementById("fourth").style.backgroundColor)];
-    
+
     //Fill the 4 divs
     var rowsNumber = document.getElementById("table").rows.length;
-    let items = document.getElementById("table").getElementsByTagName("tbody")[0].getElementsByTagName("tr")[rowsNumber-1].getElementsByClassName("result-containter")[0].getElementsByClassName("result-item");
+    let items = document.getElementById("table").getElementsByTagName("tbody")[0].getElementsByTagName("tr")[rowsNumber-1].getElementsByClassName("result-container")[0].getElementsByClassName("result-item");
 
-    for(let i =0; i<4;i++){
-        if(randomColors.includes(mySequence[i])){
-            items[i].style.backgroundColor = "black"; // C'è nella posizione sbagliata
-            if(mySequence[i] === randomColors[i]) items[i].style.backgroundColor = "white"; //In posizione corretta
+    //1. Find 'black's i.e. right colour in right location
+    const blacks = [],
+        whites = [], //actual position
+        whitesGuess = []; //guess position
+    let i, j,
+        cntBlacks = 0,
+        cntWhites = 0;
+    for (i = 0; i < 4; ++i)
+    {
+        let isBlack = (randomColors[i] === mySequence[i]);
+        blacks[i] = isBlack;
+        if (isBlack)
+            ++cntBlacks;
+    }
+    //2. For non-blacks, see if they appear elsewhere
+    for (i = 0; i < 4; ++i)
+    {
+        if (!blacks[i])
+        {
+            //check if this colour is in other slot
+            for (j = 0; j < 4; ++j)
+            {
+                if (i === j) continue; //not black, so won't be in same slot
+                if (!blacks[j] && !whites[j])
+                {
+                    if (randomColors[j] === mySequence[i])
+                    {
+                        whites[j] = true;
+                        whitesGuess[i] = true;
+                        ++cntWhites;
+                        break;
+                    }
+                }
+            }
         }
-        else{
-            // Colore non presente
+    }
+    if (!EASY_MODE)
+    {
+        for (i = 0; i < cntBlacks; ++i)
+        {
+            items[i].style.backgroundColor = "black";
+        }
+        for (j = 0; j < cntWhites; ++j, ++i)
+        {
+            items[i].style.backgroundColor = "white";
+        }
+    }
+    else
+    {
+        items[0].parentElement.style['grid-template-columns'] = 'repeat(4, 1fr)';
+        for (i = 0; i < 4; ++i)
+        {
+            if (blacks[i])
+                items[i].style.backgroundColor = "black";
+            if (whitesGuess[i])
+                items[i].style.backgroundColor = "white";
         }
     }
 
     //Display win
     if(checkWin(mySequence,randomColors)){
         showWin();
-        setTimeout(hideAlert, 3000);
-        setTimeout(function() {location.reload();}, 2000);
+        //setTimeout(hideAlert, 3000);
+        //setTimeout(function() {location.reload();}, 2000);
         return;
     }
 
     //Remove event listener from old row
     let slots = document.getElementsByClassName("color-item");
-    for(let i =0; i<(attempts*4);i++){
+    for(let i = 0; i < (attempts * 4); ++i)
+    {
         slots[i].removeAttribute("id");
         slots[i].removeEventListener("dragover",dragOverEvent);
         slots[i].removeEventListener("drop",dropEvent);
     }
-    
 
+    document.getElementById("chances").innerHTML = String(MAX_CHANCES - attempts);
+
+    if (attempts === MAX_CHANCES)
+    {
+        showLost();
+        //setTimeout(hideAlert, 3000);
+        //setTimeout(function() {location.reload();}, 2000);
+        return;
+    }
+
+    addNewRow();
+}
+
+function addNewRow()
+{
     //Add the new row
     let newRow = document.createElement("tr");
     newRow.classList.add('row-content');
-    
+
     newRow.innerHTML =
     '<td><div class="color-item" id="first"></div></td>' +
     '<td><div class="color-item" id="second"></div></td>' +
     '<td><div class="color-item" id="third"></div></td>' +
     '<td><div class="color-item" id="fourth"></div></td>' +
-    '<td class="result-containter">' +
+    '<td class="result-container">' +
         '<div class="result-box">' +
             '<div class="result-item"></div>' +
             '<div class="result-item"></div>' +
@@ -241,5 +339,4 @@ function submitButton(e){
     newRow.addEventListener("drop",dropEvent);
 
     document.getElementById("table").getElementsByTagName("tbody")[0].appendChild(newRow);
-
 }

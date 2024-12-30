@@ -2,6 +2,8 @@
 
 This is a *mod* of [Steven's Mastermind](https://github.com/TheStevenDev/Mastermind), which unfortunately does NOT really work well - it gives the wrong clues, amongst other shortcomings >.<"
 
+**LIVE DEMO**: https://sdneon.github.io/games/mastermind/
+
 ## Improvements
 * **Correct** clues are given. (Hopefully it's all fixed).
   * Alternate **'Easy Mode'** to show clues in their positions.
